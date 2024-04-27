@@ -345,6 +345,61 @@ macro_rules! impl_scalar_op {
     };
 }
 
+macro_rules! impl_scalar_op_lhs {
+    ($f:ty, $struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<$f>$($(, $dim: Dim)*)?,> Mul<$struct<T, $f $($(, $dim)*)?>> for $f
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>,)?
+        {
+            type Output = $struct<T, $f$($(, $dim)*)?>;
+            #[inline]
+            fn mul(self, mut other: $struct<T, $f$($(, $dim)*)?>) -> Self::Output {
+                other *= self;
+                other
+            }
+        }
+
+        impl<T: DualNum<$f>$($(, $dim: Dim)*)?,> Div<$struct<T, $f $($(, $dim)*)?>> for $f
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>,)?
+        {
+            type Output = $struct<T, $f$($(, $dim)*)?>;
+            #[inline]
+            #[allow(clippy::suspicious_arithmetic_impl)]
+            fn div(self, other: $struct<T, $f$($(, $dim)*)?>) -> Self::Output {
+                self * other.inv()
+            }
+        }
+
+        impl<T: DualNum<$f>$($(, $dim: Dim)*)?,> Add<$struct<T, $f $($(, $dim)*)?>> for $f
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>,)?
+        {
+            type Output = $struct<T, $f$($(, $dim)*)?>;
+            #[inline]
+            fn add(self, mut other: $struct<T, $f$($(, $dim)*)?>) -> Self::Output {
+                other.re += self;
+                other
+            }
+        }
+
+        impl<T: DualNum<$f>$($(, $dim: Dim)*)?,> Sub<$struct<T, $f $($(, $dim)*)?>> for $f
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>,)?
+        {
+            type Output = $struct<T, $f$($(, $dim)*)?>;
+            #[inline]
+            fn sub(self, other: $struct<T, $f$($(, $dim)*)?>) -> Self::Output {
+                self + -other
+            }
+        }
+    };
+}
+
 macro_rules! impl_inv {
     ($struct:ident$(, [$($dim:tt),*])?) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> Inv for $struct<T, F$($(, $dim)*)?>
@@ -649,8 +704,39 @@ macro_rules! impl_num {
         {
             type FromStrRadixErr = F::FromStrRadixErr;
             #[inline]
-            fn from_str_radix(_str: &str, _radix: u32) -> Result<Self, Self::FromStrRadixErr> {
+            fn from_str_radix(_str: &str, _radtix: u32) -> Result<Self, Self::FromStrRadixErr> {
                 unimplemented!()
+            }
+        }
+    };
+}
+
+macro_rules! impl_trait {
+    ($struct:ident$(, [$($dim:tt),*])?, $trait:ident, $fn:ident) => {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::$trait for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            type Output = Self;
+            #[inline]
+            fn $fn(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::$fn(&self)
+            }
+        }
+    };
+}
+
+macro_rules! impl_trait_no_output {
+    ($struct:ident$(, [$($dim:tt),*])?, $trait:ident, $fn:ident, $fn1:ident) => {
+        impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::$trait for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            #[inline]
+            fn $fn(value: f64) -> Self {
+                Self::$fn1(T::from_f64(value).unwrap())
             }
         }
     };
@@ -669,11 +755,17 @@ macro_rules! impl_dual {
         impl_neg!($struct, [$($im),*]$(, [$($dim),*])?);
         impl_assign_ops!($struct, [$($im),*]$(, [$($dim),*])?);
         impl_scalar_op!($struct, [$($im),*]$(, [$($dim),*])?);
+        impl_scalar_op_lhs!(f32, $struct, [$($im),*]$(, [$($dim),*])?);
+        impl_scalar_op_lhs!(f64, $struct, [$($im),*]$(, [$($dim),*])?);
         impl_inv!($struct$(, [$($dim),*])?);
         impl_iterator!($struct$(, [$($dim),*])?);
         impl_from_primitive!($struct$(, [$($dim),*])?);
         impl_signed!($struct$(, [$($dim),*])?);
         impl_num!($struct$(, [$($dim),*])?);
         impl_float_const!($struct$(, [$($dim),*])?);
+        impl_trait!($struct$(, [$($dim),*])?, Sqrt, sqrt);
+        impl_trait!($struct$(, [$($dim),*])?, Ln, ln);
+        impl_trait!($struct$(, [$($dim),*])?, Exp, exp);
+        impl_trait_no_output!($struct$(, [$($dim),*])?, FromF64, from_f64, from_re);
     };
 }

@@ -370,3 +370,47 @@ fn test_dual_bessel_j2_4() {
     assert!((res.re - -0.279979741339189).abs() < 1e-12);
     assert!((res.eps - -0.132099570594364).abs() < 1e-12);
 }
+
+#[test]
+fn test_dual_float_addition() {
+    let res = Dual64::new(1., 2.);
+    let _add_f64 = res + 1f64;
+    let _f64_add = 1f64 + res;
+
+    let res = Dual32::new(1., 2.);
+    let _add_f64 = res + 1f32;
+    let _f64_add = 1f32 + res;
+}
+
+#[test]
+fn test_dual_float_subtraction() {
+    let res = Dual64::new(1., 2.);
+    let _sub_f64 = res - 1f64;
+    let _f64_sub = 1f64 - res;
+
+    let res = Dual32::new(1., 2.);
+    let _sub_f64 = res - 1f32;
+    let _f64_sub = 1f32 - res;
+}
+
+#[test]
+fn test_dual_float_multiplication() {
+    let res = Dual64::new(1., 2.);
+    let _mul_f64 = res * 1f64;
+    let _f64_mul = 1f64 * res;
+
+    let res = Dual32::new(1., 2.);
+    let _mul_f64 = res * 1f32;
+    let _f64_mul = 1f32 * res;
+}
+
+#[test]
+fn test_dual_float_division() {
+    let res = Dual64::new(1., 2.);
+    let _div_f64 = res / 1f64;
+    let _f64_div = 1f64 / res;
+
+    let res = Dual32::new(1., 2.);
+    let _div_f64 = res / 1f32;
+    let _f64_div = 1f32 / res;
+}

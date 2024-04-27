@@ -803,4 +803,36 @@ mod test {
         let z2 = (x / y).atan();
         assert_relative_eq!(z.eps, z2.eps, epsilon = 1e-14);
     }
+
+    #[test]
+    fn dual64_from_f64() {
+        <Dual64 as geo_traits::FromF64>::from_f64(1.0);
+    }
+
+    #[test]
+    fn dual64_sqrt() {
+        let four = Dual64::from_re(4.0);
+        let two = Dual64::from_re(2.0);
+        assert_eq!(two, <Dual64 as geo_traits::Sqrt>::sqrt(four));
+    }
+
+    #[test]
+    fn dual64_ln() {
+        let one = Dual64::from_re(1.0);
+        let zero = Dual64::from_re(0.0);
+        assert_eq!(zero, <Dual64 as geo_traits::Ln>::ln(one));
+    }
+
+    #[test]
+    fn dual64_exp() {
+        let one = Dual64::from_re(1.0);
+        let zero = Dual64::from_re(0.0);
+        assert_eq!(one, <Dual64 as geo_traits::Exp>::exp(zero));
+    }
+
+    #[test]
+    fn num_dual_impl_number() {
+        fn requires_number<T: geo_traits::Number>() {}
+        requires_number::<Dual64>();
+    }
 }
