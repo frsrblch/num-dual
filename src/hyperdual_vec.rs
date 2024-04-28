@@ -11,7 +11,7 @@ use std::ops::{
 };
 
 /// A vector hyper-dual number for the calculation of partial Hessians.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct HyperDualVec<T: DualNum<F>, F, M: Dim, N: Dim>
 where
     DefaultAllocator: Allocator<T, M> + Allocator<T, M, N> + Allocator<T, U1, N>,

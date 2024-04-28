@@ -1007,3 +1007,9 @@ fn test_dual2_vec_bessel_j2_4() {
     assert!((v2[(1, 0)] - 0.240029203653306).abs() < 1e-12);
     assert!((v2[(1, 1)] - 0.240029203653306).abs() < 1e-12);
 }
+
+#[test]
+fn dual2_vec_number() {
+    fn takes_number<T: geo_traits::Number>() {}
+    takes_number::<Dual2Vec64<Const<2>>>();
+}

@@ -11,7 +11,7 @@ use std::ops::{
 };
 
 /// A scalar second order dual number for the calculation of second derivatives.
-#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Dual2<T: DualNum<F>, F> {
     /// Real part of the second order dual number

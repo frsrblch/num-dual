@@ -844,6 +844,23 @@ macro_rules! impl_trait_no_output {
     };
 }
 
+macro_rules! impl_partial_ord {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        /// Like PartialEq, comparisons are only made based on the real part. This allows the code to follow the
+        /// same execution path as real-valued code would.
+        impl<T: DualNum<F> + PartialOrd, F: Float$($(, $dim: Dim)*)?> PartialOrd for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            #[inline]
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                self.re.partial_cmp(&other.re)
+            }
+        }
+    };
+}
+
 macro_rules! impl_dual {
     ($struct:ident, [$($im:ident),*]$(, [$($dim:tt),*])?) => {
         impl_from_f!($struct, [$($im),*]$(, [$($dim),*])?);
@@ -871,5 +888,6 @@ macro_rules! impl_dual {
         impl_trait_no_output!($struct$(, [$($dim),*])?, FromF64, from_f64, from_re);
         impl_trait_trig!($struct$(, [$($dim),*])?);
         impl_trait_inv_trig!($struct$(, [$($dim),*])?);
+        impl_partial_ord!($struct$(, [$($dim),*])?);
     };
 }
