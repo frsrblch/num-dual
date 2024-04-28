@@ -815,7 +815,7 @@ macro_rules! impl_trait_inv_trig {
             }
 
             fn asinh(self) -> Self::Output {
-                DualNum::asinh(&self)q
+                DualNum::asinh(&self)
             }
 
             fn acosh(self) -> Self::Output {
