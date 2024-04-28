@@ -423,3 +423,41 @@ fn test_dual2_bessel_j2_4() {
     assert!((res.v1 - -0.132099570594364).abs() < 1e-12);
     assert!((res.v2 - 0.240029203653306).abs() < 1e-12);
 }
+
+#[test]
+fn dual2_inv_trig() {
+    use std::f64::consts::{FRAC_PI_2, PI};
+
+    let x = Dual2::new(-1.0, 1.0, 0.0);
+    let y = Dual2::new(0.0, 2.0, 0.0);
+
+    let lt_pi = geo_traits::InvTrig::atan2(y + 0.001, x);
+    assert!((PI - 0.01..PI).contains(&lt_pi.re));
+    assert!((-2.001..-2.0).contains(&lt_pi.v1));
+    assert!((-4.0..-3.99).contains(&lt_pi.v2));
+
+    let pi = geo_traits::InvTrig::atan2(y, x);
+    assert!((PI - 0.000001..PI + 0.000001).contains(&pi.re));
+    assert!((-2.000001..-1.999999).contains(&pi.v1));
+    assert!((-4.000001..-3.999999).contains(&pi.v2));
+
+    let gt_neg_pi = geo_traits::InvTrig::atan2(y - 0.001, x);
+    assert!((-PI..PI + 0.0001).contains(&gt_neg_pi.re));
+    assert!((-2.0..-1.99).contains(&gt_neg_pi.v1));
+    assert!((-4.01..-4.0).contains(&gt_neg_pi.v2));
+
+    let zero = geo_traits::InvTrig::atan2(y, -x);
+    assert!((-0.000001..0.000001).contains(&zero.re));
+    assert!((1.999999..2.000001).contains(&zero.v1));
+    assert!((3.999999..4.000001).contains(&zero.v2));
+
+    let half_pi = geo_traits::InvTrig::atan2(-x, y);
+    assert!((FRAC_PI_2 - 0.000001..FRAC_PI_2 + 0.000001).contains(&half_pi.re));
+    assert!((-2.000001..-1.999999).contains(&half_pi.v1));
+    assert!((-4.000001..-3.999999).contains(&half_pi.v2));
+
+    let neg_half_pi = geo_traits::InvTrig::atan2(x, y);
+    assert!((-FRAC_PI_2 - 0.000001..-FRAC_PI_2 + 0.000001).contains(&neg_half_pi.re));
+    assert!((1.999999..2.000001).contains(&neg_half_pi.v1));
+    assert!((3.999999..4.000001).contains(&neg_half_pi.v2));
+}

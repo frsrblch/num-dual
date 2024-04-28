@@ -771,41 +771,59 @@ macro_rules! impl_trait_trig {
     };
 }
 
-macro_rules! impl_trait_trig_inv {
+macro_rules! impl_trait_inv_trig {
     ($struct:ident$(, [$($dim:tt),*])?) => {
-        impl<T: DualNum<F> + Send + Sync, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::InvTrig for $struct<T, F$($(, $dim)*)?>
+        impl<T, F$($(, $dim: Dim)*)?> geo_traits::InvTrig for $struct<T, F$($(, $dim)*)?>
         where
+            Self: DualNum<F>,
+            T: DualNum<F> + PartialOrd + geo_traits::InvTrig<Output = T> + Copy + num_traits::Zero,
+            F: num_traits::Float,
             $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
             DefaultAllocator: Allocator<T$(, $dim)*>)?
         {
             type Output = Self;
-            #[inline]
+
+            fn atan2(self, x: Self) -> Self {
+                let y = self;
+                let two = Self::from_re(T::from_f64(2.0).unwrap());
+                let pi = Self::from_re(T::from_f64(std::f64::consts::PI).unwrap());
+                let nan = Self::from_re(T::from_f64(f64::NAN).unwrap());
+
+                let (Some(x_cmp), Some(y_cmp)) = (x.re.partial_cmp(&T::zero()), y.re.partial_cmp(&T::zero()) ) else {
+                    return nan;
+                };
+                let sqrt_x2_y2 = (&x * &x + &y * &y).sqrt();
+                use std::cmp::Ordering::*;
+                match (x_cmp, y_cmp) {
+                    (Greater, _) => geo_traits::InvTrig::atan(y / (sqrt_x2_y2 + x)) * two,
+                    (Less | Equal, Greater | Less) => geo_traits::InvTrig::atan((sqrt_x2_y2 - x) / y) * two,
+                    (Less, Equal) => geo_traits::InvTrig::atan(-y / (sqrt_x2_y2 - x)) * two + pi,
+                    (Equal, Equal) => nan,
+                }
+            }
+
             fn asin(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::asin(&self)
+                DualNum::asin(&self)
             }
-            #[inline]
+
             fn acos(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::acos(&self)
+                DualNum::acos(&self)
             }
-            #[inline]
+
             fn atan(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::atan(&self)
+                DualNum::atan(&self)
             }
-            #[inline]
-            fn atan2(self, _y: Self) -> Self::Output {
-                unimplemented!("too much hassle, I'll do it when I need it")
-            }
-            #[inline]
+
             fn asinh(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::asinh(&self)
+                DualNum::asinh(&self)q
             }
-            #[inline]
+
             fn acosh(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::acosh(&self)
+                DualNum::acosh(&self)
             }
-            #[inline]
+
             fn atanh(self) -> Self::Output {
-                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::atanh(&self)
+                DualNum::atanh(&self)
             }
         }
     };
@@ -852,6 +870,6 @@ macro_rules! impl_dual {
         impl_trait!($struct$(, [$($dim),*])?, Exp, exp);
         impl_trait_no_output!($struct$(, [$($dim),*])?, FromF64, from_f64, from_re);
         impl_trait_trig!($struct$(, [$($dim),*])?);
-        impl_trait_trig_inv!($struct$(, [$($dim),*])?);
+        impl_trait_inv_trig!($struct$(, [$($dim),*])?);
     };
 }
