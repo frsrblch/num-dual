@@ -727,6 +727,90 @@ macro_rules! impl_trait {
     };
 }
 
+macro_rules! impl_trait_trig {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F> + geo_traits::Trig, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::Trig for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            type Output = Self;
+            #[inline]
+            fn tau() -> Self {
+                Self::from_re(T::tau())
+            }
+            #[inline]
+            fn sin_cos(self) -> (Self, Self) {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::sin_cos(&self)
+            }
+            #[inline]
+            fn sin(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::sin(&self)
+            }
+            #[inline]
+            fn cos(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::cos(&self)
+            }
+            #[inline]
+            fn tan(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::tan(&self)
+            }
+            #[inline]
+            fn sinh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::sinh(&self)
+            }
+            #[inline]
+            fn cosh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::cosh(&self)
+            }
+            #[inline]
+            fn tanh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::tanh(&self)
+            }
+        }
+    };
+}
+
+macro_rules! impl_trait_trig_inv {
+    ($struct:ident$(, [$($dim:tt),*])?) => {
+        impl<T: DualNum<F> + Send + Sync, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::InvTrig for $struct<T, F$($(, $dim)*)?>
+        where
+            $($(DefaultAllocator: Allocator<T, $dim> + Allocator<T, U1, $dim> + Allocator<T, $dim, $dim>,)*
+            DefaultAllocator: Allocator<T$(, $dim)*>)?
+        {
+            type Output = Self;
+            #[inline]
+            fn asin(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::asin(&self)
+            }
+            #[inline]
+            fn acos(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::acos(&self)
+            }
+            #[inline]
+            fn atan(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::atan(&self)
+            }
+            #[inline]
+            fn atan2(self, _y: Self) -> Self::Output {
+                unimplemented!("too much hassle, I'll do it when I need it")
+            }
+            #[inline]
+            fn asinh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::asinh(&self)
+            }
+            #[inline]
+            fn acosh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::acosh(&self)
+            }
+            #[inline]
+            fn atanh(self) -> Self::Output {
+                <$struct<T, F$($(, $dim)*)?> as DualNum<F>>::atanh(&self)
+            }
+        }
+    };
+}
+
 macro_rules! impl_trait_no_output {
     ($struct:ident$(, [$($dim:tt),*])?, $trait:ident, $fn:ident, $fn1:ident) => {
         impl<T: DualNum<F>, F: DualNumFloat$($(, $dim: Dim)*)?> geo_traits::$trait for $struct<T, F$($(, $dim)*)?>
@@ -767,5 +851,7 @@ macro_rules! impl_dual {
         impl_trait!($struct$(, [$($dim),*])?, Ln, ln);
         impl_trait!($struct$(, [$($dim),*])?, Exp, exp);
         impl_trait_no_output!($struct$(, [$($dim),*])?, FromF64, from_f64, from_re);
+        impl_trait_trig!($struct$(, [$($dim),*])?);
+        impl_trait_trig_inv!($struct$(, [$($dim),*])?);
     };
 }
